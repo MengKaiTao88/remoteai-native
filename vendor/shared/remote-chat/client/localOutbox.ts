@@ -53,6 +53,13 @@ export class LocalOutbox {
     for (const message of this.messages) {
       if (receipts.has(message.id)) this.acknowledged.add(message);
     }
+    // A slow PC can acknowledge after the request timed out. That confirms the existing
+    // submission; remove its failed preview without submitting it or later drafts again.
+    const remaining = this.messages.filter(message => message.busy || !receipts.has(message.id));
+    if (remaining.length !== this.messages.length) {
+      this.messages = remaining;
+      this.publish();
+    }
   }
 
   remove(id: string): QueueDraft | undefined {

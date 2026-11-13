@@ -21,6 +21,7 @@ export interface GuiAccountChoice {
   available: boolean;
   accountSource?: string;
   active?: boolean;
+  cliSelected?: boolean;
 }
 export interface GuiAccountsSnapshot {
   selection: GuiAccountSelection;
@@ -70,17 +71,23 @@ function isChoice(value: unknown): value is GuiAccountChoice {
     && typeof choice.available === 'boolean'
     && [choice.searchDetail, choice.plan, choice.websiteUrl, choice.accountSource]
       .every(text => text === undefined || typeof text === 'string')
-    && (choice.active === undefined || typeof choice.active === 'boolean');
+    && (choice.active === undefined || typeof choice.active === 'boolean')
+    && (choice.cliSelected === undefined || typeof choice.cliSelected === 'boolean');
 }
 
 /** Claude uses its native default when set; otherwise all engines use the proxy selection. */
 export function guiAccountSelectionForEngine(
   selection: GuiAccountSelection | undefined,
-  choices: ReadonlyArray<Pick<GuiAccountChoice, 'id' | 'accountSource' | 'active'>>,
+  choices: ReadonlyArray<Pick<GuiAccountChoice, 'id' | 'accountSource' | 'active' | 'cliSelected'>
+    & { kind?: GuiAccountChoice['kind'] }>,
   engine: GuiEngine = 'codex',
 ): GuiAccountSelection {
   const native = engine === 'claude' && choices.find(choice => choice.accountSource === 'claudeCode' && choice.active);
-  return native ? { kind: 'account', id: native.id } : selection ?? { kind: 'none' };
+  if (native) return { kind: 'account', id: native.id };
+  const routed = engine !== 'codex' && choices.find(choice => choice.cliSelected);
+  if (routed && routed.kind) return { kind: routed.kind, id: routed.id };
+  if (engine !== 'codex' && choices.some(choice => choice.cliSelected !== undefined)) return { kind: 'none' };
+  return selection ?? { kind: 'none' };
 }
 
 export function isGuiAccountSelected(

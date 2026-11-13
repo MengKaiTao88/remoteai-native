@@ -1,3 +1,4 @@
+import { createResetPriorityClient, RESET_PRIORITY_READ, RESET_PRIORITY_SET } from './resetPriority';
 import type { TerminalRead, TerminalInfo, TerminalSize, TerminalLaunchOptions } from '../terminal/types';
 import type { SshApi, SshConnect, SshEndpoint, SshFileAction, SshFileReply, SshX11 } from '../terminal/ssh';
 import type { SshProfileStore } from '../terminal/sshProfiles';
@@ -31,6 +32,7 @@ export interface RemoteCliStatus {
   error: string;
 }
 export const GUI_TOOL_OPERATIONS = new Set([
+  RESET_PRIORITY_READ, RESET_PRIORITY_SET,
   ...GUI_SETTINGS_OPERATIONS,
   CODEX_STATUS_OPERATION,
   'guiBrowser',
@@ -64,6 +66,7 @@ export function createGuiToolsClient(request: <T>(body: object) => Promise<T>,
       request<SshFileReply>({ operation: 'guiTerminalSshFiles', id, request: input }),
   };
   return {
+    resetPriority: createResetPriorityClient(request),
     settings: createGuiSettingsClient(request),
     serviceStatus: () => request<CodexServiceStatus>({ operation: CODEX_STATUS_OPERATION }),
     browser: (input: import('../browser/automation').BrowserRequest) =>

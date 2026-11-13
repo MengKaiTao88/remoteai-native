@@ -2,6 +2,7 @@ import type { Item, Thread, Turn } from './types';
 import { restoreTurnTiming } from '../../conversation/turnTiming';
 import { reconcileAcknowledgedItems } from '../../chat/acknowledgedMessages';
 import { mergeItemOrder } from '../../chat/itemOrder';
+import { mergeTurnOrder } from './turnOrder';
 import { reconcileProcessHistory } from './processHistory';
 import { mergeItemLifecycle } from '../../conversation/itemStatus';
 
@@ -72,7 +73,8 @@ export function mergeHistory(snapshot: Thread, live: Thread, before: Thread,
   // Notifications received during a history read take precedence, including decreases after compaction.
   const tokenUsage = live.tokenUsage !== before.tokenUsage
     ? live.tokenUsage : snapshot.tokenUsage ?? live.tokenUsage;
+  const order = mergeTurnOrder(snapshot.turns ?? [], (live.turns ?? []).filter(turn => turns.has(turn.id)));
   return { ...snapshot, ...(tokenUsage ? { tokenUsage } : {}),
-    turns: [...turns.values()].map((turn) => turn.status === 'inProgress'
+    turns: order.map(id => turns.get(id)!).map((turn) => turn.status === 'inProgress'
     ? restoreTurnTiming(turn, previous.get(turn.id)) : turn) };
 }

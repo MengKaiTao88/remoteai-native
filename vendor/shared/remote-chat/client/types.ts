@@ -24,9 +24,10 @@ export interface SendInput {
 export interface ChatProject { cwd: string; label: string }
 
 export interface ChatState {
-  taskRecoverySupported?: boolean;
+  accessUpdate?: 'nextTurn';
   draftScope?: string;
   localQueue?: Record<string, import('../queue').QueueMessage[]>;
+  taskRecoverySupported?: boolean;
   directEndpoints?: import('../connectionEndpoints').ConnectionEndpoints;
   publicEndpoints?: import('../publicEndpoints').ConnectionPublicEndpoints;
   connectionStage?: import('../connectionHealth').ConnectionStage;
