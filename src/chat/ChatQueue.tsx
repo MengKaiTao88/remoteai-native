@@ -18,7 +18,7 @@ export function ChatQueue({ messages, running, disabled, act, edit, editDisabled
   useLanguage();
   const { selected, select, canMoveUp, canMoveDown } = useQueueSelection(messages, disabled);
   if (!messages.length) return null;
-  const sending = messages.some((message) => message.busy || message.local);
+  const sending = messages.some((message) => message.busy || message.local || message.official);
   return <View style={queueStyles.queue} accessibilityLabel={t("client.chat.queuedMessages")}>
     <View style={queueStyles.heading}><Text style={styles.subtitle}>{t("client.chat.queued")}{' '}{messages.length}</Text>
       <View style={queueStyles.actions}>
@@ -35,9 +35,9 @@ export function ChatQueue({ messages, running, disabled, act, edit, editDisabled
         onPress={() => void act('queueMoveDown', selected.id)}>
         <Feather name="arrow-down" size={17} color={color(palette.muted, 'muted')} /></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.editQueuedMessage")}
-        disabled={disabled || editDisabled || selected.busy} style={queueStyles.action}
+        disabled={disabled || editDisabled || selected.busy || selected.official} style={queueStyles.action}
         onPress={() => void edit(selected.id)}>
-        <Text style={[styles.buttonText, (disabled || editDisabled || selected.busy) && styles.disabled]}>{t("client.chat.edit.051836")}</Text>
+        <Text style={[styles.buttonText, (disabled || editDisabled || selected.busy || selected.official) && styles.disabled]}>{t("client.chat.edit.051836")}</Text>
       </Pressable></View></View>
     <ScrollView style={queueStyles.list} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
       {messages.map((message) => <View key={message.id}
@@ -45,18 +45,18 @@ export function ChatQueue({ messages, running, disabled, act, edit, editDisabled
         <Text style={styles.subtitle}>↳</Text>
         <Pressable style={styles.fill} accessibilityRole="button" accessibilityLabel={t("client.chat.selectQueuedMessage", { value1: message.text })}
           accessibilityState={{ selected: selected.id === message.id }} onPress={() => select(message.id)}>
-          <Text numberOfLines={2} style={queueStyles.text}>{message.text || t("client.chat.imageMessage")}</Text>
+          <Text numberOfLines={2} style={queueStyles.text}>{message.official ? 'Codex · ' : 'Remote AI · '}{message.text || t("client.chat.imageMessage")}</Text>
           {message.imageCount > 0 && <Text style={styles.subtitle}>{message.imageCount}{' '}{t("client.chat.images")}</Text>}
           {message.attachmentCount > 0 && <Text style={styles.subtitle}>{message.attachmentCount}{' '}{t("client.chat.attachments")}</Text>}
           {message.busy && <Text accessibilityLiveRegion="polite" style={styles.subtitle}>{t("client.chat.sending")}</Text>}
           {message.error && <Text accessibilityRole="alert" style={queueStyles.error}>{displayError(message.error)}</Text>}
         </Pressable>
-        <Pressable accessibilityRole="button" disabled={disabled || sending || message.local} style={queueStyles.action}
+        <Pressable accessibilityRole="button" disabled={disabled || sending || message.local || message.official} style={queueStyles.action}
           onPress={() => void act('queueSendNow', message.id)}>
           <Text style={[styles.buttonText, (disabled || sending || message.local) && styles.disabled]}>
             {t("client.chat.sendNow")}</Text></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.deleteQueuedMessage")}
-          disabled={disabled || message.busy} style={queueStyles.action}
+          disabled={disabled || message.busy || message.official} style={queueStyles.action}
           onPress={() => void act('queueRemove', message.id)}>
           <Text style={[styles.subtitle, (disabled || message.busy) && styles.disabled]}>×</Text></Pressable>
       </View>)}
